@@ -20,30 +20,43 @@ This project provides a high-performance solution for calculating the edit dista
 
 ## Prerequisites
 
+*   Git (for cloning the repository).
 *   A C++11 compatible compiler (e.g., GCC, Clang, MSVC).
 *   Python (version 3.6 or newer recommended).
 *   `pip` (Python package installer).
 
-## Getting Started
+## Installation from Source (via Git)
 
-### 1. Install Pybind11
+1.  **Clone the Repository**:
+    Replace `your-username/your-repository-name` with the actual URL of the Git repository.
+    ```bash
+    git clone https://github.com/your-username/your-repository-name.git
+    cd your-repository-name
+    ```
 
-Pybind11 is used for creating the Python bindings for the C++ code. It's listed as a setup requirement in `setup.py` but you can also install it manually:
-```bash
-pip install pybind11
-```
+2.  **Install Pybind11 (if not building through setup_requires)**:
+    Pybind11 is used for creating the Python bindings for the C++ code. It's listed as a setup requirement in `setup.py` but you can also install it manually if preferred or if `setup_requires` causes issues in your environment:
+    ```bash
+    pip install pybind11
+    ```
 
-### 2. Build the C++ Extension
+3.  **Build and Install the Package**:
+    Navigate to the project's root directory (where `setup.py` is located after cloning) and run:
+    ```bash
+    pip install .
+    ```
+    This command invokes `setup.py` to build the C++ extension and install the package into your Python environment.
+    Alternatively, for development, you can build in-place:
+    ```bash
+    python setup.py build_ext --inplace
+    ```
+    This creates the shared object file (e.g., `edit_distance_cpp.cpython-XX-architecture.so` or `.pyd`) directly in the current directory, allowing you to run `main.py` and `test_edit_distance.py` without installing the package globally.
 
-Navigate to the project's root directory (where `setup.py` is located) and run the following command:
+## Usage after Installation
 
-```bash
-python setup.py build_ext --inplace
-```
+If you have installed the package using `pip install .` or built it in-place using `python setup.py build_ext --inplace`, you can then use the module.
 
-This command compiles the C++ code and creates a Python extension module (e.g., `edit_distance_cpp.cpython-XX-architecture.so` or `edit_distance_cpp.cpXX-win_amd64.pyd`) in the current directory. This file allows Python to call the C++ functions.
-
-### 3. Run the Example
+### Run the Example
 
 Once the module is built, you can run the example script:
 
@@ -81,3 +94,17 @@ All tests should pass if the module was built successfully and the code is funct
 *   **Extend C++ Logic**: If you need different string similarity metrics or further optimizations, you can modify `edit_distance.cpp` and update the bindings in `bindings.cpp`. Remember to rebuild the module after any C++ changes.
 
 This project serves as a template for CPU-intensive text processing tasks where C++ performance is beneficial within a Python-driven workflow.
+
+## Performance
+
+The C++ implementation of edit distance and k-closest word searching offers a significant performance improvement over a pure Python equivalent. The exact speedup depends on factors such as vocabulary size, the number of target words, average string lengths, and the specific hardware.
+
+The Wagner-Fischer algorithm for Levenshtein distance has a time complexity of O(m*n), where *m* and *n* are the lengths of the two strings being compared. Finding the *k* closest words involves performing this calculation for each of the *V* words in the vocabulary against a target word, followed by a sort (approximately *V* log *V*). This process is repeated for each of the *T* target words.
+
+Due to compiled code execution, more efficient string handling, and tighter loops, the C++ version typically outperforms Python by a considerable margin, often by one to two orders of magnitude (e.g., 10x to 100x faster) for reasonably large datasets.
+
+You can run a comparative benchmark using the provided `benchmark.py` script:
+```bash
+python benchmark.py
+```
+This script will generate sample data, run both the C++ extension and a pure Python implementation, and report the time taken and the calculated speedup. Ensure the C++ module is built (`python setup.py build_ext --inplace` or `pip install .`) before running the benchmark for the C++ version to be included.
